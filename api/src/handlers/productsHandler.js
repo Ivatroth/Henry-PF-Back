@@ -1,4 +1,16 @@
-const { popularProductByCategory, findProductInactiveUser, findProductActiveUser, getOrderProduct, findNameProdPrice, createProduct, findProdCatPrice, postPagoMercadoPago, updateProductController, createReviewProduct, findReviewProduct } = require("../controllers/productsControllers");
+const { popularProductByCategory, 
+  findProductInactiveUser, 
+  findProductActiveUser, 
+  getOrderProduct, 
+  findNameProdPrice, 
+  createProduct, 
+  findProdCatPrice, 
+  postPagoMercadoPago, 
+  updateProductController, 
+  createReviewProduct, 
+  findReviewProduct,
+  } = require("../controllers/productsControllers");
+
 
 
 //! Este Handler solicita los productos ACTIVOS de un usuario a su controller
@@ -97,8 +109,8 @@ const getProductsInactivosUser = async (req, res) => {
 //! Handlers para cargar review de producto
 const setReviewProduct = async (req, res) => {
   try {
-    const { id, punctuationproduct, coment } = req.body;
-    const newReview = await createReviewProduct({ id, punctuationproduct, coment });
+    const { idProduc, rating, descripcion, email } = req.body;
+    const newReview = await createReviewProduct( idProduc, rating, descripcion, email);
     res.status(200).json(newReview);
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -106,9 +118,11 @@ const setReviewProduct = async (req, res) => {
 };
 //! Handlers para buscar review de producto
 const getReviewProduct = async (req, res) => {
+  console.log("ENTRAAAA");
   try {
-    const { id } = req.body;
-    const review = await findReviewProduct({ id });
+    const { id } = req.params;
+    console.log(id);
+    const review = await findReviewProduct(id);
     res.status(200).json(review);
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -120,10 +134,10 @@ const getReviewProduct = async (req, res) => {
 
   const { id } = req.params;
   const { name, img, stock, description, price, isOnSale, salePrice,
-      status, deleteLogic, categories,email  } = req.body;
+      status, deleteLogic  } = req.body;
   try {
       await updateProductController({id, name, img, stock, description, price, isOnSale, salePrice,
-          status, deleteLogic, categories,email});
+          status, deleteLogic});
       res.status(200).send("El producto ha sido modificado con exito")
   } catch (error) {
       res.status(404).json({error: error.message})
@@ -180,6 +194,7 @@ module.exports = {
   postShoppingHandler, 
   upDateProductHandler,
   setReviewProduct,
-  getReviewProduct
+  getReviewProduct,
+ 
 };
 

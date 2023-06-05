@@ -106,6 +106,7 @@ const findNameProdPrice = async (nameproduct, max, min, page, size) => {
 
 //! Controllers para cargar productos 
 const createProduct = async ({ name, img, stock, description, price, isOnSale, salePrice, status, categories, email}) =>{
+  const statusMayusculas = status.toUpperCase();
   let iduser = {};
   try {
     iduser = await user.findOne({where: {email: email}});
@@ -139,7 +140,7 @@ const createProduct = async ({ name, img, stock, description, price, isOnSale, s
       price, 
       isOnSale, 
       salePrice, 
-      status,
+      status: statusMayusculas,
       userId
     });
     console.log("Creacion de producto Realizado");
@@ -154,9 +155,17 @@ const createProduct = async ({ name, img, stock, description, price, isOnSale, s
 
   //! Controller para cargar review de producto
 
-  const createReviewProduct = async (id, punctuationproduct, coment) => {
+  const createReviewProduct = async (idProduc, rating, descripcion, email) => {
+    let us = {};
     try {
-      const newReview = await review.create({punctuationproduct, coment, productId: id})
+      us = await user.findOne({ where: {email: email}})
+    } catch (error) {
+      console.log("No se encuentra usuario");
+      throw new Error("No se encuentra usuario")
+    }
+    let nombre = us.name +" " + us.lastName;
+    try {
+      const newReview = await review.create({punctuationproduct: rating, coment: descripcion, productId: idProduc, user: nombre })
     } catch (error) {
       console.log("Error en la creacion del review");
       throw Error("Error en la creacion del review");
@@ -166,15 +175,19 @@ const createProduct = async ({ name, img, stock, description, price, isOnSale, s
 
 //! Controller para buscar un review
 
-const findReviewProduct = (id) => {
+const findReviewProduct =async (id) => {
+  console.log(id);
+  let reviews = []
   try {
-    const review = review.findAll({where: {productId: id}})
+    reviews = await review.findAll({
+      where: { productId: id },
+    });
   } catch (error) {
     console.log("Error en la buscar el review");
     throw Error("Error en la buscar el review");
   }
 
-  return review;
+  return reviews;
 
 }
 
@@ -190,42 +203,34 @@ const updateProductController = async ({
   salePrice,
   status,
   deleteLogic,
-  categories,
-  email,
-  
+ 
 }) => {
 
-  const idProducto = parseInt(id) 
-  const iduser = await user.findOne({where: {email: email}});
-  if(!iduser) throw new Error('El usuario no esta registrado');
-  const userId  = iduser.id;
-  const idCategory = await Category.findOne({ where: { name: categories } });
-  const productInstance = await product.findByPk(idProducto);//Esto permite obtener el id del producto despues de eso obtenemos a que categoria esta relacionado este producto
-  if (!idCategory) throw new Error('Categoría incorrecta');
-  const updateprod = await product.update(
-    {
-      img,
-      name,
-      stock,
-      description,
-      price,
-      isOnSale,
-      salePrice,
-      status,
-      deleteLogic,
-      userId
-    },
-    {
-      where: {
-        id: idProducto
+  try {
+    await product.update(
+      {
+        img,
+        name,
+        stock,
+        description,
+        price,
+        isOnSale,
+        salePrice,
+        status,
+        deleteLogic,
+      },
+      {
+        where: {
+          id: id,
+        }
       }
-    }
-  );
-  
-  await productInstance.addCategories(idCategory);// Aqui agregamos a esta instancia el idCategoria 
-  //a la tabla categoría de acuerdo al id del producto cuando la relaciones es de muchos a muchas
-  
-  return updateprod;
+    );
+  } catch (error) {
+    console.log("Error en la actualizacion del producto");
+    throw Error("Error en la actualizacion del producto");
+  }
+    
+  // return "Producto actualizado con exito";
 };
 
 
